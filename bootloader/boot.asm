@@ -129,10 +129,10 @@ cmd_quit: db 'quit', 0
 cmd_boot: db 'boot', 0
 msg_quit_start: db 0x0D, 0x0A,'Shutting down', 0
 msg_boot_start: db 0x0D, 0x0A,'Booting', 0
-msg_unknown: db 'Unknown command', 0x0D, 0x0A, 0
+msg_unknown: db 0x0D, 0x0A,'Unknown command', 0x0D, 0x0A, 0x0D, 0x0A, 0
 msg_newline: db 0x0D, 0x0A, 0
 input_buffer: times 64 db 0
-buffer_pos: db 0
+buffer_pos: db 0x0D, 0x0A, 0
 
 %include "keyboard.asm"
 %include "animation.asm"
