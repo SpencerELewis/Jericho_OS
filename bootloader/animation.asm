@@ -40,14 +40,6 @@ animate_dots:
     call delay          ; Delay after erasing to see blank state
     pop cx
     loop .cycle
-    ; Leave 3 dots at end
-    mov ah, 0x0E
-    mov al, '.'
-    int 0x10
-    mov al, '.'
-    int 0x10
-    mov al, '.'
-    int 0x10
     ret
 
 delay:
