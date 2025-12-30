@@ -2,28 +2,25 @@
 [ORG 0x7c00]
 
 start:
-    cli ;Disable interrupts
-    mov ax, 0x00
-    mov ds, ax ;Set DS to 0'
-    mov es, ax ;Set ES to 0'
-    mov ss, ax ;Set SS to 0'
-    mov sp, 0x7c00
-    sti ;Enable interrupts
     mov si, msg
 
 print:
     lodsb ;Loads byte at DS:SI into AL and increments SI
     cmp al, 0 ;Check for null terminator
-    je done
+    je wait_key
     mov ah, 0x0E
     int 0x10 ;Print character in AL
-    jmp print ;recursive call print
+    jmp print
 
-done:
-    cli
-    hlt ;Halt the CPU
+wait_key:
+    call keyboard_handler ; Wait for keypress, result in AL
+    mov ah, 0x0E
+    int 0x10 ; Print pressed key
+    jmp wait_key ; Loop back to wait for next key
 
-msg: db 'Hello World!', 0 ; Null-terminated string
+msg: db 0x0D, 0x0A, 'JerichOS boot initiated', 0x0D, 0x0A, 0x0D, 0x0A, 0 ; Null-terminated string
+
+%include "keyboard.asm"
 
 times 510 - ($ - $$) db 0 ; Fill the rest of the boot sector with zeros (must be 510 bytes)
 
