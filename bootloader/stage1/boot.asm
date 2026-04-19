@@ -2,6 +2,14 @@
 [ORG 0x7c00]
 
 start:
+    cli
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov sp, 0x7C00
+    cld
+    sti
     mov si, msg
 
 print:
@@ -13,7 +21,6 @@ print:
     jmp print
 
 init_input:
-    mov di, input_buffer ; DI points to start of input buffer
     mov byte [buffer_pos], 0 ; Reset buffer position
 
 wait_key:
@@ -133,9 +140,8 @@ cmd_boot: db 'boot', 0
 msg_quit_start: db 0x0D, 0x0A,'Shutting down', 0
 msg_boot_start: db 0x0D, 0x0A,'Booting', 0
 msg_unknown: db 0x0D, 0x0A,'Unknown command', 0x0D, 0x0A, 0x0D, 0x0A, 0
-msg_newline: db 0x0D, 0x0A, 0
 input_buffer: times 32 db 0
-buffer_pos: db 0x0D, 0x0A, 0
+buffer_pos: db 0
 
 %include "stage1/keyboard.asm"
 %include "stage1/animation.asm"
