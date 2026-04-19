@@ -137,8 +137,8 @@ msg_newline: db 0x0D, 0x0A, 0
 input_buffer: times 32 db 0
 buffer_pos: db 0x0D, 0x0A, 0
 
-%include "keyboard.asm"
-%include "animation.asm"
+%include "stage1/keyboard.asm"
+%include "stage1/animation.asm"
 
 times 510 - ($ - $$) db 0 ; Fill the rest of the boot sector with zeros (must be 510 bytes)
 

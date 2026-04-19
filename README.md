@@ -14,6 +14,8 @@ cd bootloader
 make
 ```
 
+Stage 1 source files are in `bootloader/stage1` (`boot.asm`, `keyboard.asm`, and `animation.asm`).
+
 ### Run with QEMU
 ```powershell
 qemu-system-x86_64 -drive format=raw,file=./bootloader/bin/boot.bin
