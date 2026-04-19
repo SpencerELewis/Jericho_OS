@@ -13,6 +13,9 @@ start:
     mov [boot_drive], dl
     cld
     sti
+    ; Set a known 80x25 text mode and clear the screen.
+    mov ax, 0x0003
+    int 0x10
     mov si, msg
 
 print:
@@ -134,7 +137,7 @@ compare_strings:
     mov al, 0
     ret
 
-msg: db 0x0D, 0x0A, 'JerichOS boot initiated', 0x0D, 0x0A
+msg: db 0x0D, 0x0A, 'JerichOS boot', 0x0D, 0x0A
     db 'Opts:', 0x0D, 0x0A
     db '  boot - start JerichOS', 0x0D, 0x0A
     db '  quit - power off', 0x0D, 0x0A, 0x0D, 0x0A, 0
