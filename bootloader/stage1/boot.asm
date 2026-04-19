@@ -2,12 +2,15 @@
 [ORG 0x7c00]
 
 start:
+    ; Establish a known real-mode execution state before doing any memory/string work.
     cli
     xor ax, ax
     mov ds, ax
     mov es, ax
     mov ss, ax
     mov sp, 0x7C00
+    ; BIOS passes boot drive in DL; preserve it for later INT 13h disk reads.
+    mov [boot_drive], dl
     cld
     sti
     mov si, msg
@@ -132,7 +135,7 @@ compare_strings:
     ret
 
 msg: db 0x0D, 0x0A, 'JerichOS boot initiated', 0x0D, 0x0A
-    db 'Options:', 0x0D, 0x0A
+    db 'Opts:', 0x0D, 0x0A
     db '  boot - start JerichOS', 0x0D, 0x0A
     db '  quit - power off', 0x0D, 0x0A, 0x0D, 0x0A, 0
 cmd_quit: db 'quit', 0
@@ -142,6 +145,8 @@ msg_boot_start: db 0x0D, 0x0A,'Booting', 0
 msg_unknown: db 0x0D, 0x0A,'Unknown command', 0x0D, 0x0A, 0x0D, 0x0A, 0
 input_buffer: times 32 db 0
 buffer_pos: db 0
+; Saved BIOS boot drive number (copied from DL at startup).
+boot_drive: db 0
 
 %include "stage1/keyboard.asm"
 %include "stage1/animation.asm"
