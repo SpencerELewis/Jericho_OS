@@ -27,7 +27,7 @@ wait_key:
     ; Store character in buffer
     mov di, input_buffer
     mov bl, [buffer_pos]
-    cmp bl, 63          ; Max buffer size - 1
+    cmp bl, 31          ; Max buffer size - 1
     jge wait_key        ; Buffer full, ignore input
     xor bh, bh
     add di, bx
@@ -124,14 +124,17 @@ compare_strings:
     mov al, 0
     ret
 
-msg: db 0x0D, 0x0A, 'JerichOS boot initiated', 0x0D, 0x0A, 0x0D, 0x0A, 0 
+msg: db 0x0D, 0x0A, 'JerichOS boot initiated', 0x0D, 0x0A
+    db 'Options:', 0x0D, 0x0A
+    db '  boot - start JerichOS', 0x0D, 0x0A
+    db '  quit - power off', 0x0D, 0x0A, 0x0D, 0x0A, 0
 cmd_quit: db 'quit', 0
 cmd_boot: db 'boot', 0
 msg_quit_start: db 0x0D, 0x0A,'Shutting down', 0
 msg_boot_start: db 0x0D, 0x0A,'Booting', 0
 msg_unknown: db 0x0D, 0x0A,'Unknown command', 0x0D, 0x0A, 0x0D, 0x0A, 0
 msg_newline: db 0x0D, 0x0A, 0
-input_buffer: times 64 db 0
+input_buffer: times 32 db 0
 buffer_pos: db 0x0D, 0x0A, 0
 
 %include "keyboard.asm"

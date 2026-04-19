@@ -16,7 +16,7 @@ make
 
 ### Run with QEMU
 ```powershell
-qemu-system-x86_64 -drive format=raw,file=./bin/boot.bin
+qemu-system-x86_64 -drive format=raw,file=./bootloader/bin/boot.bin
 ```
 
 Make note this command that runs `make` creates `boot.bin` in the `bin` folder. This file is needed to boot with QEMU.
