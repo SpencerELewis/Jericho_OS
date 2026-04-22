@@ -10,12 +10,11 @@ The Jericho Operating System for x86 64 bit
 
 ### Build the Bootloader
 ```powershell
-cd bootloader
 make
 ```
 
 The bootloader is organized in two stages:
-- **Stage 1** source files in `bootloader/stage1`: `boot.asm` (boot menu and stage2 loader), `keyboard.asm`, and `animation.asm`.
+- **Stage 1** source file in `bootloader/stage1`: `boot.asm` (minimal boot sector and stage2 loader).
 - **Stage 2** source file in `bootloader/stage2`: `stage2.asm` (loader with safe stack).
 
 The build produces:
@@ -28,11 +27,8 @@ The build produces:
 qemu-system-x86_64 -drive format=raw,file=./bootloader/bin/os-image.bin
 ```
 
-At the boot menu, type `boot` to load and execute stage2, or `quit` to power off.
-
 ### Clean Build Artifacts
 ```powershell
-cd bootloader
 make clean
 ```
 
