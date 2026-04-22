@@ -67,7 +67,6 @@ If `make` is not available, use `mingw32-make` in PowerShell.
 From the repository root, run:
 
 ```powershell
-cd bootloader
 mingw32-make
 ```
 
@@ -83,7 +82,7 @@ qemu-system-x86_64 -drive format=raw,file=./bootloader/bin/boot.bin
 
 ## 8. Clean build artifacts
 
-From the `bootloader` directory, run:
+From the root directory, run:
 
 ```powershell
 mingw32-make clean
