@@ -2,7 +2,7 @@
 [ORG 0x7c00]
 
 start:
-    ; Establish a known real-mode execution state before doing any memory/string work.
+    ; Establish a known real-mode execution state.
     cli
     xor ax, ax
     mov ds, ax
@@ -16,96 +16,73 @@ start:
     ; Set a known 80x25 text mode and clear the screen.
     mov ax, 0x0003
     int 0x10
-    mov si, msg
-
-print:
-    lodsb ;Loads byte at DS:SI into AL and increments SI
-    cmp al, 0 ;Check for null terminator
-    je init_input
-    mov ah, 0x0E
-    int 0x10 ;Print character in AL
-    jmp print
-
-init_input:
-    mov byte [buffer_pos], 0 ; Reset buffer position
-
-wait_key:
-    call keyboard_handler ; Wait for keypress, result in AL
-    cmp al, 0x08        ; Was it Backspace?
-    je handle_backspace_input
-    cmp al, 0x0D        ; Was it Enter?
-    je process_command
-    cmp al, 0x20        ; Is it printable? (space or greater)
-    jl wait_key         ; Skip non-printable characters
-    ; Store character in buffer
-    mov di, input_buffer
-    mov bl, [buffer_pos]
-    cmp bl, 31          ; Max buffer size - 1
-    jge wait_key        ; Buffer full, ignore input
-    xor bh, bh
-    add di, bx
-    mov [di], al        ; Store character
-    inc byte [buffer_pos]
-    ; Print the character
-    mov ah, 0x0E
-    int 0x10
-    jmp wait_key
-
-handle_backspace_input:
-    cmp byte [buffer_pos], 0 ; Already at start?
-    je wait_key         ; Nothing to delete
-    dec byte [buffer_pos] ; Remove from buffer
-    jmp wait_key
-
-process_command:
-    ; Add null terminator to buffer
-    mov di, input_buffer
-    mov bl, [buffer_pos]
-    xor bh, bh
-    add di, bx
-    mov byte [di], 0
-    ; Print newline
-    mov ah, 0x0E
-    mov al, 0x0D
-    int 0x10
-    mov al, 0x0A
-    int 0x10
-    ; Compare with "quit"
-    mov si, input_buffer
-    mov di, cmd_quit
-    call compare_strings
-    cmp al, 1
-    je do_quit
-    ; Compare with "boot"
-    mov si, input_buffer
-    mov di, cmd_boot
-    call compare_strings
-    cmp al, 1
-    je do_boot
-    ; Unknown command
-    mov si, msg_unknown
+    
+    ; Print startup message.
+    mov si, msg_start
     call print_string
-    jmp init_input
+    
+    ; Wait for keypress or timeout (approximately 3 seconds).
+    ; Using timer ticks: ~18.2 ticks per second, so ~55 ticks for 3 seconds.
+    mov ah, 0x00
+    int 0x1A
+    mov bx, dx          ; Save initial tick count
+    mov cx, 55          ; Ticks to wait
 
-do_quit:
-    mov si, msg_quit_start
-    call print_string
-    ; Shutdown QEMU using ACPI
-    mov ax, 0x2000
-    mov dx, 0x604
-    out dx, ax
-.quit_loop:
-    mov cx, 1
-    call animate_dots
-    jmp .quit_loop
+.wait_loop:
+    ; Check if a key is pressed without blocking (INT 16h, AH=1, sets ZF if no key).
+    mov ah, 0x01
+    int 0x16
+    jnz .key_pressed    ; If a key was pressed, jump
+    
+    ; Check elapsed time.
+    mov ah, 0x00
+    int 0x1A
+    sub dx, bx
+    cmp dx, cx
+    jl .wait_loop       ; Keep waiting if not enough ticks elapsed
+    
+    ; Timeout reached; proceed to load stage2.
+    jmp load_stage2
 
-do_boot:
-    mov si, msg_boot_start
+.key_pressed:
+    ; A key was pressed; consume it and proceed to load stage2.
+    mov ah, 0x00
+    int 0x16            ; Get the key (and discard it)
+
+load_stage2:
+    mov si, msg_load
     call print_string
-.boot_loop:
-    mov cx, 1
-    call animate_dots
-    jmp .boot_loop
+    
+    ; Load stage2 (1 sector at LBA 1) into memory at 0x8000.
+    mov ax, 0x8000
+    mov es, ax
+    xor bx, bx
+    mov dl, [boot_drive]
+    ; Reset disk.
+    mov ah, 0x00
+    int 0x13
+    ; Read 1 sector.
+    mov ah, 0x02
+    mov al, 1
+    mov ch, 0
+    mov cl, 2
+    mov dh, 0
+    int 0x13
+    jnc .load_ok
+    
+    ; Load failed.
+    mov si, msg_fail
+    call print_string
+    jmp halt
+
+.load_ok:
+    mov si, msg_ok
+    call print_string
+    ; Jump to stage2 entry point at 0x8000:0000.
+    jmp 0x8000:0x0000
+
+halt:
+    jmp halt
 
 print_string:
     lodsb
@@ -117,42 +94,12 @@ print_string:
 .done:
     ret
 
-compare_strings:
-    ; SI = string 1, DI = string 2
-    ; Returns AL = 1 if equal, 0 if not
-.loop:
-    mov al, [si]
-    mov bl, [di]
-    cmp al, bl
-    jne .not_equal
-    cmp al, 0
-    je .equal
-    inc si
-    inc di
-    jmp .loop
-.equal:
-    mov al, 1
-    ret
-.not_equal:
-    mov al, 0
-    ret
-
-msg: db 0x0D, 0x0A, 'JerichOS boot', 0x0D, 0x0A
-    db 'Opts:', 0x0D, 0x0A
-    db '  boot - start JerichOS', 0x0D, 0x0A
-    db '  quit - power off', 0x0D, 0x0A, 0x0D, 0x0A, 0
-cmd_quit: db 'quit', 0
-cmd_boot: db 'boot', 0
-msg_quit_start: db 0x0D, 0x0A,'Shutting down', 0
-msg_boot_start: db 0x0D, 0x0A,'Booting', 0
-msg_unknown: db 0x0D, 0x0A,'Unknown command', 0x0D, 0x0A, 0x0D, 0x0A, 0
-input_buffer: times 32 db 0
-buffer_pos: db 0
-; Saved BIOS boot drive number (copied from DL at startup).
+msg_start: db 0x0D, 0x0A, 'JerichOS', 0x0D, 0x0A, 0x0D, 0x0A
+           db 'Loading...', 0
+msg_load: db 0x0D, 0x0A, 'L: ', 0
+msg_ok: db 'OK', 0x0D, 0x0A, 0
+msg_fail: db 'Err', 0x0D, 0x0A, 0
 boot_drive: db 0
-
-%include "stage1/keyboard.asm"
-%include "stage1/animation.asm"
 
 times 510 - ($ - $$) db 0 ; Fill the rest of the boot sector with zeros (must be 510 bytes)
 
