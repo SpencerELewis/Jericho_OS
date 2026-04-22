@@ -4,8 +4,8 @@ all: bootloader/bin ./bootloader/bin/boot.bin ./bootloader/bin/stage2.bin ./boot
 ./bootloader/bin/boot.bin: ./bootloader/stage1/boot.asm
 	nasm -f bin ./bootloader/stage1/boot.asm -o ./bootloader/bin/boot.bin
 
-./bootloader/bin/stage2.bin: ./bootloader/stage2/stage2.asm
-	nasm -f bin ./bootloader/stage2/stage2.asm -o ./bootloader/bin/stage2.bin
+./bootloader/bin/stage2.bin: ./bootloader/stage2/loader.asm
+	nasm -f bin ./bootloader/stage2/loader.asm -o ./bootloader/bin/stage2.bin
 
 ./bootloader/bin/os-image.bin: ./bootloader/bin/boot.bin ./bootloader/bin/stage2.bin
 	cat ./bootloader/bin/boot.bin ./bootloader/bin/stage2.bin > ./bootloader/bin/os-image.bin

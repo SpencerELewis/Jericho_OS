@@ -15,7 +15,7 @@ make
 
 The bootloader is organized in two stages:
 - **Stage 1** source file in `bootloader/stage1`: `boot.asm` (minimal boot sector and stage2 loader).
-- **Stage 2** source file in `bootloader/stage2`: `stage2.asm` (loader with safe stack).
+- **Stage 2** source file in `bootloader/stage2`: `loader.asm` (loader with safe stack).
 
 The build produces:
 - `bootloader/bin/boot.bin` - Stage 1 boot sector (512 bytes)
